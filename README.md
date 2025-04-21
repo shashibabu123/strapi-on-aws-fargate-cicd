@@ -1,0 +1,1 @@
+# strapi-on-aws-fargate
