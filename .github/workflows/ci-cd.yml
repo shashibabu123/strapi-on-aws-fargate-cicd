@@ -43,6 +43,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Remove Terraform lock file (if it exists)
+        run: rm -f .terraform.lock.hcl
+
+
       - name: Terraform Init
         run: terraform init
 
