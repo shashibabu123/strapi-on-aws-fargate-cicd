@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  ECR_REPO: "strapi-app"  # Ensure this matches your ECR repo name
-  IMAGE_TAG: ${{ github.sha }}
+  ECR_REPO: "strapi-app"  # Change this to your repo name in ECR
+  IMAGE_TAG: latest       # Using latest as the tag
 
 jobs:
   deploy:
@@ -28,11 +28,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Pull ECR Docker image
+      - name: Pull ECR Docker image (latest)
         run: |
           docker pull 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
-      - name: Tag Docker image
+      - name: Tag Docker image for ECR
         run: |
           docker tag 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:$IMAGE_TAG 118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
@@ -51,6 +51,6 @@ jobs:
           terraform apply -auto-approve \
             -var="vpc_id=vpc-06d8d62f289ef46d0" \
             -var='subnet_ids=["subnet-02cb9a11b1c1330c8", "subnet-0a9f0fbde5057fade"]' \
-            -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPO:${{ github.sha }}" \
+            -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPO }}:${{ env.IMAGE_TAG }}" \
             -var="execution_role_arn=arn:aws:iam::118273046134:role/ecsTaskExecutionRole"
 
