@@ -49,6 +49,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: ./terraform
 
       - name: Terraform Apply
         run: |
@@ -57,4 +58,4 @@ jobs:
             -var='subnet_ids=["subnet-02cb9a11b1c1330c8", "subnet-0a9f0fbde5057fade"]' \
             -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPO }}:${{ env.IMAGE_TAG }}" \
             -var="execution_role_arn=arn:aws:iam::118273046134:role/ecsTaskExecutionRole"
-
+        working-directory: ./terraform
