@@ -57,12 +57,14 @@ jobs:
         run: terraform init
         working-directory: ./terraform
 
+      
       - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve \
-            -var="vpc_id=vpc-06d8d62f289ef46d0" \
-            -var='subnet_ids=["subnet-02cb9a11b1c1330c8", "subnet-0a9f0fbde5057fade"]' \
-            -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest" \
-            -var="execution_role_arn=arn:aws:iam::118273046134:role/ecsTaskExecutionRole" \
-            -var="ecs_cluster_name=strapi-cluster"
+        run: |   
+          terraform apply \
+           -auto-approve \
+           -var="vpc_id=vpc-06d8d62f289ef46d0" \
+           -var='subnet_ids=["subnet-0559598c6ee2e0fc7", "subnet-08e2ae430c70613cf"]' \
+           -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest" \
+           -var="execution_role_arn=arn:aws:iam::118273046134:role/ecsTaskExecutionRole" \
+           -var="ecs_cluster_name=strapi-cluster"
         working-directory: ./terraform
