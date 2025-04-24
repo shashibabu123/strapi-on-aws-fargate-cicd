@@ -1,96 +1,32 @@
-# 🚀 Strapi Deployment on AWS ECS Fargate with Terraform & GitHub Actions CI/CD
-
-[![CI/CD](https://github.com/shashibabu123/aws-fargate-cicd-setup/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/shashibabu123/aws-fargate-cicd-setup/actions/workflows/ci-cd.yml)
-[![Terraform Version](https://img.shields.io/badge/Terraform-1.6.6-blueviolet)](https://www.terraform.io/downloads)
-[![AWS](https://img.shields.io/badge/AWS-ECS%20Fargate-orange)](https://aws.amazon.com/fargate/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-blue)](https://www.docker.com/)
-
-This project automates the deployment of a Strapi application to **Amazon ECS Fargate** using **Terraform** for infrastructure provisioning and **GitHub Actions** for CI/CD. Docker images are built and pushed to **Amazon ECR**, and the ECS service is updated accordingly.
+Deploy a Strapi application on AWS using ECS Fargate, managed entirely via Terraform and Automate via Github Actions [ci/cd] and   Add CloudWatch for Monitoring (Logging & Metrics):
 
 
 🎥 **Demo Video (Loom)**:  
-[Watch Here](https://www.loom.com/share/3215f8f2cc65454baf7451a52b011f05)
+https://www.loom.com/share/ba9f03881a864684b330ef9103901860?sid=63622522-200b-47c1-a0e4-354e1242f5b7
 
----
+Step 1: Set Up Your Strapi Application with Terraform on AWS ECS Fargate
+Explanation:
+ECS Fargate is a serverless compute engine for containers that lets you run containers without managing the underlying servers.
 
-## 📁 Project Structure
-root@ip-172-31-2-115:~# tree -L 2
+Terraform will be used to define the infrastructure, including ECS, networking, and security groups, to deploy the Strapi application on AWS Fargate.
+
+Step 1: Configure Terraform for ECS Fargate
+Create ECS Task Definition in ecs.tf: Define an ECS task that references the Docker image to be used for Strapi.
+
+Step 2:Define ECS Cluster in ecs.tf.
+
+step 3: Create Security Group for ECS Service in iam.tf.
+
+Step 4.Create ECS Service in ecs.tf.
+
+Step 5. Configure CloudWatch Monitoring
+             CloudWatch Log Group in ecs.tf.
+             CloudWatch Metric Alarm for High CPU in ecs.tf.
+
+Step 6: Create CI/CD Pipeline Using GitHub Actions			 
 .
-├── aws
-│   ├── README.md
-│   ├── THIRD_PARTY_LICENSES
-│   ├── dist
-│   └── install
-├── aws-fargate-cicd-setup
-│   ├── Dockerfile
-│   ├── README.md
-│   └── terraform
 
-.
-├── Dockerfile
-├── README.md
-└── terraform
-    ├── alb.tf
-    ├── ecs.tf
-    ├── iam.tf
-    ├── main.tf
-    ├── outputs.tf
-    ├── providers.tf
-    ├── terraform.tfstate
-    ├── terraform.tfstate.1745230050.backup
-    ├── terraform.tfstate.backup
-    └── variables.tf
-## ⚙️ Prerequisites
-
-- AWS Account
-- ECR Repository (e.g., `strapi-app`)
-- IAM Role for ECS Tasks (e.g., `ecsTaskExecutionRole`)
-- GitHub Repository Secrets configured:
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-  - `AWS_REGION` (e.g., `us-east-1`)
-  - `ECR_REPO` (e.g., `strapi-app`)
-
----
-
-## 🚀 How It Works
-
-### ✅ GitHub Actions Workflow
-
-1. **Triggers on Push to `main` branch**
-2. **Authenticates with AWS**
-3. **Pulls latest Docker image**
-4. **Pushes Docker image to ECR**
-5. **Initializes Terraform**
-6. **Applies Infrastructure changes using Terraform**
-
-### 📦 Docker Image
-
-Make sure your Docker image is already built and pushed to ECR or modify the workflow to build from local.
-
----
-
-## 🌐 Terraform Variables (Example)
-
-Update the `Terraform Apply` step in `.github/workflows/ci-cd.yml` with these:
-
-```yaml
-terraform apply -auto-approve \
-  -var="vpc_id=vpc-xxxxxxxx" \
-  -var='subnet_ids=["subnet-xxxx", "subnet-yyyy"]' \
-  -var="ecr_image=118273046134.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPO }}:latest" \
-  -var="execution_role_arn=arn:aws:iam::123456789012:role/ecsTaskExecutionRole"
-
-
-🧰 Setup Instructions
-1. Clone the Repo
-bash
-Copy
-Edit
-git clone https://github.com/shashibabu123/aws-fargate-cicd-setup.git
-cd aws-fargate-cicd-setup
-2. Add GitHub Secrets
-Repository → Settings → Secrets and variables → Actions:
+Step 6: Ensure AWS credentials are set up in GitHub Secrets:
 
 AWS_ACCESS_KEY_ID
 
@@ -98,24 +34,36 @@ AWS_SECRET_ACCESS_KEY
 
 AWS_REGION
 
-ECR_REPO
+ECR_REPOSITORY (ECR repo URI)
 
-3. Push to Deploy 🚀
+Step 7: Initialize Terraform and Deploy the Infrastructure
 
-git add .
-git commit -m "initial commit for ECS Fargate CI/CD"
-git push origin main
-🧹 Clean Up
-To destroy infrastructure:
++------------------+        +-----------------------+        +---------------------+
+|  GitHub Actions | -----> | Build Docker Image and | -----> | Push Docker Image   |
+|  (CI/CD Trigger) |        |  Push to ECR           |        | to AWS ECR          |
++------------------+        +-----------------------+        +---------------------+
+            |                           |
+            v                           v
+    +-------------------+     +--------------------------+      +-------------------+
+    | Terraform Apply   | --> | Deploy to ECS Fargate    | --> | ECS Service Running |
+    | (Provision AWS Resources) | (Create ECS Task, Service) |    | with Strapi App    |
+    +-------------------+     +--------------------------+      +-------------------+
+            |
+            v
+   +-------------------------+
+   | Monitor via CloudWatch  |
+   | (Logs, Metrics, Alarms) |
+   +-------------------------+
 
+In Task 7, we have successfully:
 
-cd terraform
-terraform destroy -auto-approve
-📺 Demo
-🎥 Loom Walkthrough Video
-👉 Watch Demo
+Set up AWS ECS Fargate to run a Strapi application.
 
+Used Terraform to define the infrastructure as code.
 
+Configured CloudWatch monitoring (logs, metrics, and alarms).
+
+Automated the deployment using GitHub Actions for CI/CD.
 
 🙌 Author
 Made with ❤️ by Shashikumar
