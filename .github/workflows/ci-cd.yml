@@ -3,7 +3,7 @@ name: Deploy Strapi App to ECS Fargate
 on:
   push:
     branches:
-      - main
+      - task-8-automation
 
 env:
   ECR_REPO: "strapi-app"  # Change this to your repo name in ECR
