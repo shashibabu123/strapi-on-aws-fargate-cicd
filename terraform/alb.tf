@@ -55,6 +55,7 @@ resource "aws_lb" "strapi_alb" {
   # security_groups    = [aws_security_group.strapi_alb_sg.id]
   security_groups = ["sg-087a419c5a81404bd"] # <- Use the correct one you want
   subnets            = var.subnet_ids
+  #subnets            = [subnet-0559598c6ee2e0fc7]
   
    depends_on = [aws_security_group.strapi_alb_sg]
 }
