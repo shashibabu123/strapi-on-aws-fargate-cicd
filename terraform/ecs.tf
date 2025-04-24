@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "strapi" {
       portMappings = [
         {
           containerPort = 1337
-          hostPort      = 1337
+          hostPort      = 0
         }
       ]
       environment = [
