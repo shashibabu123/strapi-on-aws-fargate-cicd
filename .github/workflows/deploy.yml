@@ -32,11 +32,18 @@ jobs:
         aws s3 cp ecs/appspec.yaml s3://strapi-deployments-bucket/appspec.yaml
         aws s3 cp ecs/task-definition.json s3://strapi-deployments-bucket/task-definition.json
 
+
     - name: Trigger CodeDeploy
       run: |
         aws deploy create-deployment \
           --application-name strapi-app \
           --deployment-group-name strapi-deploy-group \
-          --revision revisionType=S3,s3Location={bucket=strapi-deployments-bucket,key=appspec.yaml,bundleType=YAML} \
+          --revision '{
+            "revisionType": "S3",
+            "s3Location": {
+              "bucket": "strapi-deployments-bucket",
+              "key": "strapi-app.zip",
+              "bundleType": "zip"
+            }
+          }' \
           --description "Blue-Green Deployment triggered by GitHub Actions"
-
