@@ -1,0 +1,24 @@
+{
+  "family": "strapi-task",
+  "containerDefinitions": [
+    {
+      "name": "strapi",
+      "image": "118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:<commit_sha>",
+      "portMappings": [
+        {
+          "containerPort": 1337,
+          "hostPort": 1337,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::118273046134:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::118273046134:role/ecsTaskExecutionRole"
+}
+

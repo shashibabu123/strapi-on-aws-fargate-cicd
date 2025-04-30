@@ -1,0 +1,67 @@
+name: Deploy Strapi to ECS with Blue/Green
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_URI: 118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app
+  ECS_CLUSTER: strapi-cluster
+  ECS_SERVICE: strapi-service
+  CODEDEPLOY_APP: strapi-app
+  CODEDEPLOY_GROUP: strapi-deploy-group
+  S3_BUCKET: strapi-deployments-bucket # You must create this
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: |
+        aws ecr get-login-password --region $AWS_REGION | \
+        docker login --username AWS --password-stdin $ECR_URI
+
+    - name: Build, Tag and Push Docker Image
+      run: |
+        COMMIT_SHA=${{ github.sha }}
+        IMAGE_TAG=$ECR_URI:$COMMIT_SHA
+        docker build -t $IMAGE_TAG .
+        docker push $IMAGE_TAG
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    - name: Register ECS Task Definition
+      run: |
+        sed "s|<commit_sha>|${{ github.sha }}|g" ecs/task-definition.json > ecs/final-task-def.json
+        TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://ecs/final-task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+        echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+
+    - name: Prepare appspec file and upload to S3
+      run: |
+        sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" ecs/appspec.yaml > ecs/appspec-final.yaml
+        aws s3 cp ecs/appspec-final.yaml s3://$S3_BUCKET/appspec.yaml
+
+    - name: Trigger CodeDeploy Deployment
+      run: |
+        aws deploy create-deployment \
+          --application-name $CODEDEPLOY_APP \
+          --deployment-group-name $CODEDEPLOY_GROUP \
+          --deployment-config-name CodeDeployDefault.ECSCanary10Percent5Minutes \
+          --s3-location bucket=$S3_BUCKET,bundleType=yaml,key=appspec.yaml \
+          --description "Deploy commit ${{ github.sha }}"
+
