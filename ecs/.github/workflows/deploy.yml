@@ -3,7 +3,7 @@ name: Deploy Strapi to ECS with Blue/Green
 on:
   push:
     branches:
-      - main
+      - blue-green-strapi-cicd
 
 env:
   AWS_REGION: us-east-1
