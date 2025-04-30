@@ -3,7 +3,7 @@ name: Blue/Green Deploy to ECS using ECR
 on:
   push:
     branches:
-      - blue-green-strapi-cicd
+      - blue-green-strapi-cicd  # Trigger the workflow on this branch
 
 jobs:
   deploy:
@@ -26,26 +26,41 @@ jobs:
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
-    # Step 4: Pull the Docker image from ECR
-    - name: Pull Docker image from ECR
+    # Step 4: Build and push Docker image to ECR
+    - name: Build and push Docker image to ECR
       run: |
-        docker pull 118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:latest
+        docker build -t 118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:${{ github.sha }} .
+        docker push 118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:${{ github.sha }}
 
-    # Step 5: Deploy to ECS (or trigger CodeDeploy)
+    # Step 5: Update ECS Task Definition (Dynamically Update with New Image)
+    - name: Update ECS Task Definition
+      run: |
+        # Fetch the current ECS Task Definition
+        task_def=$(aws ecs describe-task-definition --task-definition strapi-task-def)
+        
+        # Modify the task definition to update the Docker image tag
+        new_task_def=$(echo "$task_def" | jq '.taskDefinition | .containerDefinitions[0].image = "118273046134.dkr.ecr.us-east-1.amazonaws.com/strapi-app:'${{ github.sha }}'"')
+        
+        # Register the new task definition
+        echo "$new_task_def" > new-task-definition.json
+        aws ecs register-task-definition --cli-input-json file://new-task-definition.json
+
+    # Step 6: Update ECS Service to use the new task definition (Blue/Green Deployment Strategy)
     - name: Update ECS Service
       run: |
         aws ecs update-service \
           --cluster strapi-cluster \
           --service strapi-service \
-          --force-new-deployment \
-          --desired-count 2
+          --task-definition strapi-task-def:${{ github.sha }} \
+          --desired-count 2 \
+          --force-new-deployment
 
-    # Step 6: Trigger CodeDeploy (if necessary)
+    # Step 7: Trigger CodeDeploy for Blue/Green deployment (if necessary)
     - name: Deploy with CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name strapi-app \
-          --deployment-group-name strapi-deploy-group \
-          --revision revisionType=S3,bucket=strapi-deployments-bucket,key=strapi-app.zip \
-          --description "Deploy blue-green ECS update"
+          --application-name strapi-app-deployment \
+          --deployment-group-name strapi-deployment-group \
+          --revision revisionType=S3,s3Location={bucket="strapi-deployments-bucket",key="appspec.yaml",bundleType=YAML} \
+          --description "Blue/Green Deployment for strapi-app"
 
